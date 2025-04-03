@@ -4,7 +4,6 @@ version = "0.0.1"
 authors = ["Matei Pralea <matei.pralea@proton.me>"]
 edition = "2024"
 license = "AGPL-3.0-or-later"
-license-file = "LICENSE"
 
 [dependencies]
 eframe = { version = "0.31.1", default-features = false, features = [
