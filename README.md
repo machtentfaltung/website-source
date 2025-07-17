@@ -2,10 +2,9 @@
   
 ### *The source code for my website.*
  
-<img width="1600" src="https://github.com/user-attachments/assets/fad81630-8d28-44f8-bc0b-c2bcf4f90f24">
+<img width="1600" src="https://github.com/user-attachments/assets/5d2ed50e-a0fb-49a1-931d-c146af8e5c98">
 
 </div>
-
 
 ## Building
 
