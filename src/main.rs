@@ -1,6 +1,8 @@
 #![warn(clippy::all)]
-
+#[allow(unused_must_use)]
 mod app;
+mod lang;
+
 use app::Application;
 
 fn main() {

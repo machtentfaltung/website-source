@@ -1,4 +1,7 @@
-use eframe::egui::{self, Button, Layout, Pos2, RichText, Vec2};
+use std::collections::BTreeMap;
+
+use crate::lang::Language;
+use eframe::egui::{self, Button, FontData, FontDefinitions, FontFamily, FontId, Id, RichText};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
@@ -7,6 +10,7 @@ pub struct Application {
     show_more_window: bool,
     show_about_window: bool,
     compact: bool,
+    language: Language,
 }
 
 impl Default for Application {
@@ -15,24 +19,71 @@ impl Default for Application {
             show_more_window: false,
             show_about_window: false,
             compact: false,
+            language: Language::English,
         }
     }
 }
 
 impl Application {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        let mut fonts = FontDefinitions::default();
+
+        fonts.font_data.insert(
+            "DINish".to_owned(),
+            FontData::from_static(include_bytes!("../assets/DINish-Regular.ttf")).into(),
+        );
+
+        fonts.font_data.insert(
+            "Autobahn".to_owned(),
+            FontData::from_static(include_bytes!("../assets/Autobahn.ttf")).into(),
+        );
+
+        fonts
+            .families
+            .entry(egui::FontFamily::Proportional)
+            .or_default()
+            .insert(0, "DINish".to_owned());
+
+        let mut new_family = BTreeMap::new();
+
+        new_family.insert(
+            FontFamily::Name("Autobahn".into()),
+            vec!["Autobahn".to_owned()],
+        );
+
+        fonts.families.append(&mut new_family);
+
+        cc.egui_ctx.set_fonts(fonts);
+
         if let Some(storage) = cc.storage {
             return eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
         }
+
         Default::default()
     }
 }
 
+fn custom_heading(ui: &mut egui::Ui, text: impl ToString, strong: bool) {
+    ui.add_space(3.0);
+
+    let mut text = egui::RichText::new(text.to_string()).font(FontId {
+        size: 24.0,
+        family: FontFamily::Name("Autobahn".into()),
+    });
+
+    if strong {
+        text = text.strong();
+    }
+
+    ui.heading(text);
+}
+
 fn main_window_ui(app: &mut Application, ui: &mut egui::Ui) {
-    ui.heading(egui::RichText::new("Hello there!").heading().strong());
+    custom_heading(ui, app.language.main_heading(), true);
+
     ui.horizontal_wrapped(|ui| {
         ui.spacing_mut().item_spacing.x = 0.0;
-        ui.label("My name is ");
+        ui.label(format!("{} ", app.language.my_name_is()));
         ui.label(egui::RichText::new("Matei Pralea").strong());
         ui.label(egui::RichText::new(" (matei9k).").italics());
     });
@@ -45,12 +96,12 @@ fn main_window_ui(app: &mut Application, ui: &mut egui::Ui) {
     ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
         ui.with_layout(egui::Layout::bottom_up(egui::Align::Max), |ui| {
             let text = if app.show_more_window {
-                "Show Less About Me"
+                app.language.show_less_about_me()
             } else {
-                "Show More About Me"
+                app.language.show_more_about_me()
             };
 
-            if ui.add_sized([150., 25.], Button::new(text)).clicked() {
+            if ui.add_sized([170., 25.], Button::new(text)).clicked() {
                 app.show_more_window = !app.show_more_window;
             }
         });
@@ -72,11 +123,31 @@ impl eframe::App for Application {
 
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
-                if ui.button("About").clicked() {
+                if ui.button(self.language.about()).clicked() {
                     self.show_about_window = !self.show_about_window;
                 }
+
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-                    egui::widgets::global_theme_preference_buttons(ui);
+                    if screen_size.width() >= 200. {
+                        custom_theme_buttons(&self, ui);
+                    }
+
+                    if screen_size.width() >= 400. {
+                        egui::ComboBox::from_label(self.language.language())
+                            .selected_text(self.language.language_name())
+                            .show_ui(ui, |ui| {
+                                ui.selectable_value(
+                                    &mut self.language,
+                                    Language::English,
+                                    Language::English.language_name(),
+                                );
+                                ui.selectable_value(
+                                    &mut self.language,
+                                    Language::Romanian,
+                                    Language::Romanian.language_name(),
+                                );
+                            });
+                    }
                 });
             })
         });
@@ -84,36 +155,43 @@ impl eframe::App for Application {
         if self.compact {
             egui::CentralPanel::default().show(ctx, |ui| main_window_ui(self, ui));
         } else {
-            egui::Window::new("My Website")
+            egui::Window::new(self.language.my_website())
+                .id(Id::new("main_window"))
                 .collapsible(false)
                 .resizable(false)
                 .fixed_size([300., 100.])
+                .min_size([300., 100.])
                 .show(ctx, |ui| main_window_ui(self, ui));
         }
 
         if self.show_more_window {
-            egui::Window::new("More About Me")
+            egui::Window::new(self.language.more_about_me())
+                .id(Id::new("more_window"))
                 .collapsible(false)
                 .resizable(false)
                 .open(&mut self.show_more_window)
-                .fixed_size([275., 100.])
+                .fixed_size([265., 100.])
+                .min_size([265., 100.])
                 .show(ctx, |ui| {
                     ui.with_layout(egui::Layout::top_down_justified(egui::Align::Min), |ui| {
-                        ui.label("I began my programming journey around 2020 with C# and .NET, developing various WinForms applications for fun. Since then, I have worked with languages such as JavaScript, Python, Swift, C, and Rust, creating a wide range of programs, including Discord bots, iOS apps, and desktop applications.");
+                        ui.label(self.language.more_description());
                     });
                 });
         }
 
         if self.show_about_window {
-            egui::Window::new("About")
+            egui::Window::new(self.language.about())
+                .id(Id::new("about_window"))
                 .collapsible(false)
                 .resizable(false)
+                .fixed_size([350., 220.])
+                .min_size([350., 220.])
                 .open(&mut self.show_about_window)
                 .show(ctx, |ui| {
-                    ui.heading(RichText::new("My Website").strong());
+                    custom_heading(ui, self.language.my_website(), true);
                     ui.link("https://matei9k.github.io");
                     ui.separator();
-                    ui.label(RichText::new("License Information").strong());
+                    ui.label(RichText::new(self.language.license_information()).strong());
                     ui.horizontal_wrapped(|ui| {
                         ui.spacing_mut().item_spacing.x = 0.0;
                         ui.label("This program is ");                     
@@ -122,10 +200,48 @@ impl eframe::App for Application {
                     });
                     ui.separator();
                     ui.hyperlink_to(
-                        format!("{} Website Source Code", egui::special_emojis::GITHUB),
+                        format!("{} {}", egui::special_emojis::GITHUB, self.language.website_source_code()),
                         "https://github.com/matei9k/website-source",
                     );
                 });
         }
     }
+}
+
+fn custom_theme_buttons(app: &Application, ui: &mut egui::Ui) {
+    let mut theme_preference = ui.ctx().options(|opt| opt.theme_preference);
+    theme_preference_custom_radio_buttons(&mut theme_preference, app, ui);
+    ui.ctx().set_theme(theme_preference);
+}
+
+fn theme_preference_custom_radio_buttons(
+    theme_preference: &mut egui::ThemePreference,
+    app: &Application,
+    ui: &mut egui::Ui,
+) {
+    ui.horizontal(|ui| {
+        egui::ComboBox::from_label(app.language.theme())
+            .selected_text(match theme_preference {
+                egui::ThemePreference::System => app.language.system(),
+                egui::ThemePreference::Dark => app.language.dark(),
+                egui::ThemePreference::Light => app.language.light(),
+            })
+            .show_ui(ui, |ui| {
+                ui.selectable_value(
+                    theme_preference,
+                    egui::ThemePreference::System,
+                    app.language.system(),
+                );
+                ui.selectable_value(
+                    theme_preference,
+                    egui::ThemePreference::Dark,
+                    app.language.dark(),
+                );
+                ui.selectable_value(
+                    theme_preference,
+                    egui::ThemePreference::Light,
+                    app.language.light(),
+                );
+            });
+    });
 }
