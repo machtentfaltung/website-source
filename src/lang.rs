@@ -122,4 +122,11 @@ impl Language {
             }
         }
     }
+
+    pub fn settings(&self) -> &'static str {
+        match self {
+            Language::English => "Settings",
+            Language::Romanian => "Setări",
+        }
+    }
 }

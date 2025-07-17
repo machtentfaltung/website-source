@@ -1,7 +1,6 @@
 {
   "name": "Matei Pralea",
   "short_name": "matei-pralea-website",
-  "lang": "en-US",
   "id": "/index.html",
   "start_url": "./index.html",
   "display": "standalone",

@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 pub struct Application {
     show_more_window: bool,
     show_about_window: bool,
+    show_settings_window: bool,
     compact: bool,
     language: Language,
 }
@@ -18,6 +19,7 @@ impl Default for Application {
         Self {
             show_more_window: false,
             show_about_window: false,
+            show_settings_window: false,
             compact: false,
             language: Language::English,
         }
@@ -93,19 +95,32 @@ fn main_window_ui(app: &mut Application, ui: &mut egui::Ui) {
         "https://github.com/matei9k",
     );
 
-    ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-        ui.with_layout(egui::Layout::bottom_up(egui::Align::Max), |ui| {
-            let text = if app.show_more_window {
-                app.language.show_less_about_me()
-            } else {
-                app.language.show_more_about_me()
-            };
+    if app.compact {
+        ui.add_space(5.);
+        let text = if app.show_more_window {
+            app.language.show_less_about_me()
+        } else {
+            app.language.show_more_about_me()
+        };
 
-            if ui.add_sized([170., 25.], Button::new(text)).clicked() {
-                app.show_more_window = !app.show_more_window;
-            }
+        if ui.add_sized([170., 25.], Button::new(text)).clicked() {
+            app.show_more_window = !app.show_more_window;
+        }
+    } else {
+        ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
+            ui.with_layout(egui::Layout::bottom_up(egui::Align::Max), |ui| {
+                let text = if app.show_more_window {
+                    app.language.show_less_about_me()
+                } else {
+                    app.language.show_more_about_me()
+                };
+
+                if ui.add_sized([170., 25.], Button::new(text)).clicked() {
+                    app.show_more_window = !app.show_more_window;
+                }
+            });
         });
-    });
+    }
 }
 
 impl eframe::App for Application {
@@ -128,25 +143,8 @@ impl eframe::App for Application {
                 }
 
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-                    if screen_size.width() >= 200. {
-                        custom_theme_buttons(&self, ui);
-                    }
-
-                    if screen_size.width() >= 400. {
-                        egui::ComboBox::from_label(self.language.language())
-                            .selected_text(self.language.language_name())
-                            .show_ui(ui, |ui| {
-                                ui.selectable_value(
-                                    &mut self.language,
-                                    Language::English,
-                                    Language::English.language_name(),
-                                );
-                                ui.selectable_value(
-                                    &mut self.language,
-                                    Language::Romanian,
-                                    Language::Romanian.language_name(),
-                                );
-                            });
+                    if ui.button(self.language.settings()).clicked() {
+                        self.show_settings_window = !self.show_settings_window;
                     }
                 });
             })
@@ -177,6 +175,40 @@ impl eframe::App for Application {
                         ui.label(self.language.more_description());
                     });
                 });
+        }
+
+        if self.show_settings_window {
+            let mut open = self.show_settings_window;
+            let window = egui::Window::new(self.language.settings())
+                .id(Id::new("settings_window"))
+                .collapsible(false)
+                .resizable(false)
+                .open(&mut open)
+                .fixed_size([400., 100.])
+                .min_size([400., 100.]);
+            window.show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    custom_theme_buttons(self, ui);
+                    ui.vertical(|ui| {
+                        ui.label(self.language.language());
+                        egui::ComboBox::from_id_salt("language_combo_box")
+                            .selected_text(self.language.language_name())
+                            .show_ui(ui, |ui| {
+                                ui.selectable_value(
+                                    &mut self.language,
+                                    Language::English,
+                                    Language::English.language_name(),
+                                );
+                                ui.selectable_value(
+                                    &mut self.language,
+                                    Language::Romanian,
+                                    Language::Romanian.language_name(),
+                                );
+                            });
+                    })
+                });
+            });
+            self.show_settings_window = open;
         }
 
         if self.show_about_window {
@@ -210,17 +242,18 @@ impl eframe::App for Application {
 
 fn custom_theme_buttons(app: &Application, ui: &mut egui::Ui) {
     let mut theme_preference = ui.ctx().options(|opt| opt.theme_preference);
-    theme_preference_custom_radio_buttons(&mut theme_preference, app, ui);
+    theme_preference_custom_buttons(&mut theme_preference, app, ui);
     ui.ctx().set_theme(theme_preference);
 }
 
-fn theme_preference_custom_radio_buttons(
+fn theme_preference_custom_buttons(
     theme_preference: &mut egui::ThemePreference,
     app: &Application,
     ui: &mut egui::Ui,
 ) {
-    ui.horizontal(|ui| {
-        egui::ComboBox::from_label(app.language.theme())
+    ui.vertical(|ui| {
+        ui.label(app.language.theme());
+        egui::ComboBox::from_id_salt("theme_combo_box")
             .selected_text(match theme_preference {
                 egui::ThemePreference::System => app.language.system(),
                 egui::ThemePreference::Dark => app.language.dark(),
