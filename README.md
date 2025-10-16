@@ -2,7 +2,7 @@
   
 ### *The source code for my website.*
  
-<img width="1600" src="https://github.com/user-attachments/assets/5d2ed50e-a0fb-49a1-931d-c146af8e5c98">
+<img width="1600" src="https://github.com/user-attachments/assets/c56b8f2b-7b0a-4a41-8c23-634ab250c0d8">
 
 </div>
 
