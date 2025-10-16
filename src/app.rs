@@ -86,13 +86,12 @@ fn main_window_ui(app: &mut Application, ui: &mut egui::Ui) {
     ui.horizontal_wrapped(|ui| {
         ui.spacing_mut().item_spacing.x = 0.0;
         ui.label(format!("{} ", app.language.my_name_is()));
-        ui.label(egui::RichText::new("Matei Pralea").strong());
-        ui.label(egui::RichText::new(" (matei9k).").italics());
+        ui.label(egui::RichText::new("Matei Pralea.").strong());
     });
     ui.add_space(4.);
     ui.hyperlink_to(
-        format!("{} github.com/matei9k", egui::special_emojis::GITHUB),
-        "https://github.com/matei9k",
+        format!("{} github.com/machtentfaltung", egui::special_emojis::GITHUB),
+        "https://github.com/machtentfaltung",
     );
 
     if app.compact {
@@ -221,7 +220,7 @@ impl eframe::App for Application {
                 .open(&mut self.show_about_window)
                 .show(ctx, |ui| {
                     custom_heading(ui, self.language.my_website(), true);
-                    ui.link("https://matei9k.github.io");
+                    ui.link("https://machtentfaltung.github.io");
                     ui.separator();
                     ui.label(RichText::new(self.language.license_information()).strong());
                     ui.horizontal_wrapped(|ui| {
@@ -233,7 +232,7 @@ impl eframe::App for Application {
                     ui.separator();
                     ui.hyperlink_to(
                         format!("{} {}", egui::special_emojis::GITHUB, self.language.website_source_code()),
-                        "https://github.com/matei9k/website-source",
+                        "https://github.com/machtentfaltung/website-source",
                     );
                 });
         }
