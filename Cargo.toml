@@ -1,12 +1,12 @@
 [package]
 name = "my-website"
-version = "0.0.1"
+version = "1.0.0"
 authors = ["Matei Pralea <matei.pralea@proton.me>"]
 edition = "2024"
 license = "AGPL-3.0-or-later"
 
 [dependencies]
-eframe = { version = "0.31.1", default-features = false, features = [
+eframe = { version = "0.31", default-features = false, features = [
     "web_screen_reader",
     "default_fonts",
     "glow",
@@ -15,7 +15,7 @@ eframe = { version = "0.31.1", default-features = false, features = [
 ] }
 log = "0.4"
 wasm-bindgen-futures = "0.4"
-web-sys = "0.3.70"
+web-sys = "0.3"
 serde = { version = "1", features = ["derive"] }
 
 
